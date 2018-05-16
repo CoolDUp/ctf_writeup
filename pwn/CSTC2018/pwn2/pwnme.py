@@ -1,5 +1,4 @@
 from pwn import *
-from subprocess import *
 DEBUG=1
 list = [ ]
 if DEBUG:
